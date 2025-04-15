@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { VKLogin } from 'pages/login/ui/vkLogin';
 import s from './Login.module.scss';
 import clsx from 'clsx';
 
@@ -65,7 +66,9 @@ export const Login = () => {
                     {buttonText}
                   </button>
                 </form>
+                
                 <div className={s.error}></div>
+                <VKLogin />
               </div>
             </div>
           </div>
