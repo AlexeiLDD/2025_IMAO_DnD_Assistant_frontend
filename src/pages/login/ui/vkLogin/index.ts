@@ -1,0 +1,1 @@
+export { VKLogin } from './VKLogin';

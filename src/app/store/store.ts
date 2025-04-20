@@ -7,6 +7,7 @@ import { generatedCreatureReduser } from 'entities/generatedCreature';
 import { bestiaryApi } from 'pages/bestiary/api';
 import { characterApi } from 'pages/characters/api';
 import { promtApi } from 'pages/encounterTracker/api';
+import { authApi } from 'pages/login/api';
 import { loggerReduser } from 'widgets/chatbot/model';
 
 export const store = configureStore({
@@ -18,12 +19,14 @@ export const store = configureStore({
     bestiaryApi: bestiaryApi.reducer,
     promtApi: promtApi.reducer,
     characterApi: characterApi.reducer,
+    authApi: authApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(bestiaryApi.middleware)
       .concat(promtApi.middleware)
-      .concat(characterApi.middleware),
+      .concat(characterApi.middleware)
+      .concat(authApi.middleware),
 });
 
 setupListeners(store.dispatch);
