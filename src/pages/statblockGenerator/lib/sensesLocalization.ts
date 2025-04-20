@@ -1,4 +1,5 @@
 import { Language } from 'shared/lib';
+import { SensesFormState } from '../model';
 
 export const SensesLocalization = {
   en: {
@@ -14,7 +15,7 @@ export const SensesLocalization = {
     title: 'Особые чувства',
     blindsight: 'Слепое зрение',
     darkvision: 'Тёмное зрение',
-    tremorsense: 'Чувство вибраций',
+    tremorsense: 'Чувство вибрации',
     truesight: 'Истинное зрение',
     blindBeyond: 'Слепой за пределами',
     units: 'фт.'
@@ -28,3 +29,21 @@ export const SensesLocalization = {
   blindBeyond: string;
   units: string;
 }>;
+
+export const getSenseNameMap = (language: Language) => {
+  const loc = SensesLocalization[language];
+
+  return {
+    blindsight: loc.blindsight.toLowerCase(),
+    darkvision: loc.darkvision.toLowerCase(),
+    tremorsense: loc.tremorsense.toLowerCase(),
+    truesight: loc.truesight.toLowerCase()
+  };
+};
+
+export const getReverseSenseNameMap = (language: Language) => {
+  const direct = getSenseNameMap(language);
+  return Object.fromEntries(
+    Object.entries(direct).map(([k, v]) => [v, k])
+  ) as Record<string, keyof SensesFormState>;
+};

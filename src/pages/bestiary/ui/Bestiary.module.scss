@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: row;
   gap: 1rem;
-  margin-top: 2rem;
 }
 
 .bestiaryContainer {
@@ -89,4 +88,6 @@
 
 .spinnerContainer {
   margin-top: 20px;
+  width: 100%;
+  text-align: center;
 }

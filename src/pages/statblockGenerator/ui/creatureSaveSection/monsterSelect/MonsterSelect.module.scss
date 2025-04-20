@@ -1,0 +1,56 @@
+.monsterSelect {
+    display: flex;
+    flex-direction: column;
+    max-width: 400px;
+    margin: 0 auto;
+  
+    &__title {
+      color: var(--primary-btn-color);
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+  
+    &__dropdown {
+      font-size: 14px;
+    }
+  
+    &__more {
+      font-size: 13px;
+      color: #aaa;
+      text-align: center;
+      margin-top: 4px;
+    }
+  }
+  
+  .option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: white;
+  
+    a {
+      display: flex;
+      align-items: center;
+    }
+  }
+  
+  .optionFocused {
+    background-color: var(--primary-bg-color);
+  }
+  
+  .icon {
+    width: 16px;
+    height: 16px;
+    color: var(--primary-btn-color);
+  }
+  
+  .noResults {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #aaa;
+  }
+  

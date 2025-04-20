@@ -39,7 +39,7 @@ const characterApi = createApi({
   }),
 });
 
-export const { useGetCharactersQuery, useLazyGetCharacterByIdQuery, useAddCharacterMutation } =
+export const { useLazyGetCharactersQuery, useLazyGetCharacterByIdQuery, useAddCharacterMutation } =
   characterApi;
 
 export default characterApi;

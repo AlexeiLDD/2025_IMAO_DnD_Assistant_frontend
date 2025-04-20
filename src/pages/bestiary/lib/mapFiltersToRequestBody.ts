@@ -20,7 +20,7 @@ export const mapFiltersToRequestBody = (
   start: number,
   size: number,
   searchValue: string,
-  orderParams: OrderParams[],
+  orderParams?: OrderParams[],
 ): GetCreaturesRequest => {
   const requestBody: GetCreaturesRequest = {
     start: start,
@@ -29,7 +29,7 @@ export const mapFiltersToRequestBody = (
       value: searchValue,
       exact: false,
     },
-    order: orderParams,
+    order: orderParams || [],
     filter: {
       book: [], // фильтр по книгам
       npc: [], // фильтр по NPC

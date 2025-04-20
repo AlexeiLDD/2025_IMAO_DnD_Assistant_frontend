@@ -7,19 +7,18 @@ import { Creature, creatureActions } from 'entities/creature/model';
 import { encounterActions } from 'entities/encounter/model';
 import { useLazyGetCharacterByIdQuery } from 'pages/characters/api';
 import { convertSavingThrows } from 'pages/characters/lib';
-import { calculateInitiative, CharacterClipped } from 'pages/characters/model';
+import { convertWeaponsToAttacks } from 'pages/characters/lib/convert';
+import { CharacterClipped } from 'pages/characters/model';
+import { calculateInitiative } from 'shared/lib';
 import { GridCard } from './gridCard';
 
-import { convertWeaponsToAttacks } from 'pages/characters/lib/convert';
 import placeholderImage from 'shared/assets/images/placeholder.png';
 
 type CharacterCardProps = {
   character: CharacterClipped;
-  viewMode: string;
 };
 
-export const CharacterCard: FC<CharacterCardProps> = ({ character, viewMode }) => {
-  void viewMode
+export const CharacterCard: FC<CharacterCardProps> = ({ character }) => {
   const dispatch = useDispatch();
 
   const [trigger, { data: characterData, isLoading, isError, isUninitialized, requestId }] =
@@ -77,9 +76,5 @@ export const CharacterCard: FC<CharacterCardProps> = ({ character, viewMode }) =
     }
   }, [characterData, isLoading, isError, isUninitialized, requestId]);
 
-  // return viewMode === 'grid' ? (
   return <GridCard character={character} handleAddToTtackerClick={handleAddToTtackerClick} />;
-  // ) : (
-  //   <ListCard character={character} />
-  // );
 };

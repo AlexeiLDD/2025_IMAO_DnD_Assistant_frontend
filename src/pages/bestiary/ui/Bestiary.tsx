@@ -57,7 +57,7 @@ const BestiaryContent = () => {
   }, []);
 
   const handleToggleCollapse = useCallback((category: string) => {
-    setCollapsedCategories(prev => ({
+    setCollapsedCategories((prev) => ({
       ...prev,
       [category]: !prev[category],
     }));
@@ -139,13 +139,6 @@ const BestiaryContent = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isLoading, hasMore]);
 
-  if (isLoading)
-    return (
-      <div className={s.spinnerContainer}>
-        <Spinner size={100} />
-      </div>
-    );
-
   if (isError) return <div>Error loading creatures</div>;
 
   return (
@@ -172,8 +165,8 @@ const BestiaryContent = () => {
                 <Icon20Cancel />
               </div>
             </div>
-            <FilterModalWindow 
-              onFilterChange={handleFilterChange} 
+            <FilterModalWindow
+              onFilterChange={handleFilterChange}
               selectedFilters={filters}
               collapsedCategories={collapsedCategories}
               onToggleCollapse={handleToggleCollapse}
@@ -182,27 +175,30 @@ const BestiaryContent = () => {
         </div>
       )}
 
-      <div className={s.bestiaryContent}>
-        {allCreatures.map((creature, ind) => {
-          const lastPart = creature.url.split('/').pop();
-          const isSelected = lastPart === creatureName;
+      {!isLoading && (
+        <div className={s.bestiaryContent}>
+          {allCreatures.map((creature, ind) => {
+            const lastPart = creature.url.split('/').pop();
+            const isSelected = lastPart === creatureName;
 
-          return (
-            <div key={ind} className={clsx({ [s.selectedCard]: isSelected })}>
-              <BestiaryCard creature={creature} viewMode={viewMode} isSelected={isSelected} />
-            </div>
-          );
-        })}
-      </div>
+            return (
+              <div key={ind} className={clsx({ [s.selectedCard]: isSelected })}>
+                <BestiaryCard creature={creature} viewMode={viewMode} isSelected={isSelected} />
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-      {isPending && (
+      {(isPending || isLoading) && (
         <div className={s.spinnerContainer}>
           <Spinner size={100} />
         </div>
       )}
 
-      {isLoading && <div>Loading more creatures...</div>}
-      {allCreatures.length === 0 && !isLoading && <div>Ничего не найдено</div>}
+      {allCreatures.length === 0 && !isLoading && (
+        <div className={s.spinnerContainer}>Ничего не найдено</div>
+      )}
     </div>
   );
 };

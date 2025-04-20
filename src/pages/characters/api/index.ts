@@ -1,7 +1,8 @@
 export {
   default as characterApi,
-  useGetCharactersQuery,
+  useAddCharacterMutation,
   useLazyGetCharacterByIdQuery,
+  useLazyGetCharactersQuery,
 } from './character.api';
 
 export type { GetCharactersRequest } from './character.api';

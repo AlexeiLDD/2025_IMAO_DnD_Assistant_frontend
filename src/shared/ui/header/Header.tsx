@@ -6,7 +6,6 @@ import s from './Header.module.scss';
 export const Header = () => {
   const location = useLocation();
   const [visible, setVisible] = useState(false);
-  const [lastScroll, setLastScroll] = useState(0);
 
   useEffect(() => {
     if (location.pathname === '/encounter_tracker') {
@@ -17,35 +16,10 @@ export const Header = () => {
     setVisible(true);
   }, [location]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (location.pathname === '/encounter_tracker') {
-        setVisible(false);
-        return;
-      }
-
-      const currentScroll = window.pageYOffset;
-      const isAtTop = currentScroll === 0;
-
-      if (isAtTop) {
-        setVisible(true);
-      } else if (currentScroll > lastScroll) {
-        setVisible(false);
-      } else {
-        setVisible(true);
-      }
-      setLastScroll(currentScroll);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScroll]);
-
   return (
     <>
       <div className={s.headerTrigger}></div>
-      <nav className={s.header} style={{ top: visible ? 0 : '-100px' }}>
+      <nav className={s.header} style={{ top: visible ? 0 : '-65px' }}>
         <div className={s.rightSection}>
           <Link to='/'>
             <img className={s.logo} src={logo} alt='logo' />

@@ -55,7 +55,7 @@ import {
       tags: [],
     },
     challengeRating: '1',
-    proficiencyBonus: '+2',
+    proficiencyBonus: '2',
     url: '',
     source: {
       shortName: 'HB',
@@ -70,7 +70,7 @@ import {
     armorClass: 10,
     armors: [],
     hits: {
-      average: 11,
+      average: 9,
       formula: '2d8',
     },
     speed: [
@@ -83,7 +83,7 @@ import {
       dex: 10,
       con: 10,
       int: 10,
-      wiz: 10,
+      wis: 10,
       cha: 10,
     },
     savingThrows: [],
@@ -96,7 +96,7 @@ import {
       passivePerception: '10',
       senses: []
     },
-    languages: ['Common'],
+    languages: ['Общий'],
     feats: [],
     actions: [],
     legendary: undefined,
@@ -106,6 +106,8 @@ import {
     images: [],
     environment: [],
     attacksLLM: [],
+    useCustomSpeed: false,
+
   };
   
   
@@ -164,6 +166,13 @@ import {
           changes: { challengeRating: action.payload.challengeRating }
         });
       },
+
+      updateProficiencyBonus: (state, action: PayloadAction<{id: string; proficiencyBonus: string}>) => {
+        generatedCreatureAdapter.updateOne(state, {
+          id: action.payload.id,
+          changes: { proficiencyBonus: action.payload.proficiencyBonus }
+        });
+      },
       
       updateSource: (state, action: PayloadAction<{id: string; source: Source}>) => {
         generatedCreatureAdapter.updateOne(state, {
@@ -192,6 +201,28 @@ import {
           changes: { armors: action.payload.armors }
         });
       },
+
+      updateArmorText: (state, action: PayloadAction<{id: string; armorText: string}>) => {
+        generatedCreatureAdapter.updateOne(state, {
+          id: action.payload.id,
+          changes: { armorText: action.payload.armorText }
+        });
+      },
+
+      setArmors: (state, action) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) creature.armors = action.payload.value;
+      },
+
+      setArmorClass: (state, action) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) creature.armorClass = action.payload.value;
+      },
+      
+      setArmorText: (state, action) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) creature.armorText = action.payload.value;
+      },
       
       updateHitPoints: (state, action: PayloadAction<{id: string; hits: HitPoints}>) => {
         generatedCreatureAdapter.updateOne(state, {
@@ -199,12 +230,52 @@ import {
           changes: { hits: action.payload.hits }
         });
       },
+
+      setHits: (state, action) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) creature.hits = action.payload.hits;
+      },
       
+      setCustomHp: (state, action) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) creature.customHp = action.payload.value;
+      },
+
       updateSpeed: (state, action: PayloadAction<{id: string; speed: Speed[]}>) => {
         generatedCreatureAdapter.updateOne(state, {
           id: action.payload.id,
           changes: { speed: action.payload.speed }
         });
+      },
+
+      setSpeed: (
+        state,
+        action: PayloadAction<{ id: string; value: CreatureFullData['speed'] }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) {
+          creature.speed = action.payload.value;
+        }
+      },
+      
+      setUseCustomSpeed: (
+        state,
+        action: PayloadAction<{ id: string; value: boolean }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) {
+          creature.useCustomSpeed = action.payload.value;
+        }
+      },
+      
+      setCustomSpeed: (
+        state,
+        action: PayloadAction<{ id: string; value: string }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) {
+          creature.customSpeed = action.payload.value;
+        }
       },
       
       updateAbilityScores: (state, action: PayloadAction<{id: string; ability: AbilityScores}>) => {
@@ -213,12 +284,65 @@ import {
           changes: { ability: action.payload.ability }
         });
       },
+
+      updateAbilityScore: (
+        state,
+        action: PayloadAction<{ id: string; abilityKey: keyof AbilityScores; value: number }>
+      ) => {
+        const existing = state.entities[action.payload.id];
+        if (existing) {
+          generatedCreatureAdapter.updateOne(state, {
+            id: action.payload.id,
+            changes: {
+              ability: {
+                ...existing.ability,
+                [action.payload.abilityKey]: action.payload.value,
+              },
+            },
+          });
+        }
+      },
       
       updateSavingThrows: (state, action: PayloadAction<{id: string; savingThrows: SavingThrow[]}>) => {
         generatedCreatureAdapter.updateOne(state, {
           id: action.payload.id,
           changes: { savingThrows: action.payload.savingThrows }
         });
+      },
+
+      addSavingThrow: (
+        state,
+        action: PayloadAction<{ id: string; savingThrow: SavingThrow }>
+      ) => {
+        const { id, savingThrow } = action.payload;
+        const creature = state.entities[id];
+        if (!creature) return;
+
+        if (!creature.savingThrows) {
+          creature.savingThrows = [];
+        }
+  
+        const existing = creature.savingThrows.find(st => st.name === savingThrow.name);
+        if (existing) {
+          Object.assign(existing, savingThrow); // обновляем
+        } else {
+          creature.savingThrows.push(savingThrow); // добавляем
+        }
+      },
+  
+      removeSavingThrow: (
+        state,
+        action: PayloadAction<{ id: string; name: string }>
+      ) => {
+        const { id, name } = action.payload;
+        const creature = state.entities[id];
+        if (!creature) return;
+
+        if (!creature.savingThrows) {
+          creature.savingThrows = [];
+        }
+  
+        creature.savingThrows = creature.savingThrows.filter(st => st.name !== name);
       },
       
       updateSkills: (state, action: PayloadAction<{id: string; skills: Skill[]}>) => {
@@ -227,12 +351,51 @@ import {
           changes: { skills: action.payload.skills }
         });
       },
+
+      addOrUpdateSkill: (
+        state,
+        action: PayloadAction<{ id: string; skill: { name: string; value: number } }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (!creature) return;
+      
+        if (!creature.skills) {
+          creature.skills = [];
+        }
+      
+        const existing = creature.skills.find(s => s.name === action.payload.skill.name);
+        if (existing) {
+          existing.value = action.payload.skill.value;
+        } else {
+          creature.skills.push(action.payload.skill);
+        }
+      },
+      
+      removeSkill: (
+        state,
+        action: PayloadAction<{ id: string; name: string }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (!creature?.skills) return;
+      
+        creature.skills = creature.skills.filter(s => s.name !== action.payload.name);
+      },
       
       updateDamageVulnerabilities: (state, action: PayloadAction<{id: string; damageVulnerabilities: string[]}>) => {
         generatedCreatureAdapter.updateOne(state, {
           id: action.payload.id,
           changes: { damageVulnerabilities: action.payload.damageVulnerabilities }
         });
+      },
+
+      setDamageVulnerabilities: (
+        state,
+        action: PayloadAction<{ id: string; values: string[] }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) {
+          creature.damageVulnerabilities = action.payload.values;
+        }
       },
       
       updateDamageResistances: (state, action: PayloadAction<{id: string; damageResistances: string[]}>) => {
@@ -241,12 +404,50 @@ import {
           changes: { damageResistances: action.payload.damageResistances }
         });
       },
+
+      setDamageResistances: (
+        state,
+        action: PayloadAction<{ id: string; values: string[] }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) {
+          creature.damageResistances = action.payload.values;
+        }
+      },
       
       updateConditionImmunities: (state, action: PayloadAction<{id: string; conditionImmunities: string[]}>) => {
         generatedCreatureAdapter.updateOne(state, {
           id: action.payload.id,
           changes: { conditionImmunities: action.payload.conditionImmunities }
         });
+      },
+
+      addConditionImmunity: (
+        state,
+        action: PayloadAction<{ id: string; value: string }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (!creature) return;
+      
+        if (!creature.conditionImmunities) {
+          creature.conditionImmunities = [];
+        }
+      
+        if (!creature.conditionImmunities.includes(action.payload.value)) {
+          creature.conditionImmunities.push(action.payload.value);
+        }
+      },
+      
+      removeConditionImmunity: (
+        state,
+        action: PayloadAction<{ id: string; value: string }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (!creature?.conditionImmunities) return;
+      
+        creature.conditionImmunities = creature.conditionImmunities.filter(
+          condition => condition !== action.payload.value
+        );
       },
       
       updateDamageImmunities: (state, action: PayloadAction<{id: string; damageImmunities: string[]}>) => {
@@ -255,6 +456,16 @@ import {
           changes: { damageImmunities: action.payload.damageImmunities }
         });
       },
+
+      setDamageImmunities: (
+        state,
+        action: PayloadAction<{ id: string; values: string[] }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) {
+          creature.damageImmunities = action.payload.values;
+        }
+      },
       
       updateSenses: (state, action: PayloadAction<{id: string; senses: Senses}>) => {
         generatedCreatureAdapter.updateOne(state, {
@@ -262,12 +473,35 @@ import {
           changes: { senses: action.payload.senses }
         });
       },
+
+      setSenses: (
+        state,
+        action: PayloadAction<{ id: string; senses: { name: string; value: number; additional?: string }[] }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) {
+          creature.senses = {
+            ...creature.senses,
+            senses: action.payload.senses
+          };
+        }
+      },
       
       updateLanguages: (state, action: PayloadAction<{id: string; languages: string[]}>) => {
         generatedCreatureAdapter.updateOne(state, {
           id: action.payload.id,
           changes: { languages: action.payload.languages }
         });
+      },
+
+      setLanguages: (
+        state,
+        action: PayloadAction<{ id: string; values: string[] }>
+      ) => {
+        const creature = state.entities[action.payload.id];
+        if (creature) {
+          creature.languages = action.payload.values;
+        }
       },
       
       updateFeats: (state, action: PayloadAction<{id: string; feats: Feat[]}>) => {

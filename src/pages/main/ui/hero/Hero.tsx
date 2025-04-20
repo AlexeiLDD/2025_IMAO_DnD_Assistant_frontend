@@ -20,7 +20,9 @@ export const Hero = () => {
         <img className={s.dndLogo} src={dndLogo} alt='DnD_logo'></img>
       </div>
       <Link to='bestiary'>
-        <button data-variant='primary'>Вперёд к сражениям!</button>
+      <button className={s.heroButton} data-variant='primary'>
+        Вперёд к сражениям!
+      </button>
       </Link>
     </section>
   );

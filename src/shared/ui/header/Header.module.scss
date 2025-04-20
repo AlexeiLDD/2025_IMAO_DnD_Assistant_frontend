@@ -15,17 +15,15 @@
 
 .header {
   position: fixed;
-  margin: 2rem;
-  margin-top: 1rem;
-  top: -100px;
   transition: top 0.3s ease;
   z-index: 99;
   left: 0;
-  width: calc(100vw - 5rem);
+  width: 100%;
   background: var(--secondary-bg-color);
   border: solid 4px;
+  border-top: none;
   border-color: var(--primary-bg-color);
-  border-radius: 8px;
+  border-radius: 0px 0px 20px 20px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -77,5 +75,5 @@
 }
 
 .logo {
-  height: 5rem;
+  height: 4rem;
 }

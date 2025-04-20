@@ -3,7 +3,8 @@ $border-color: #9b9b9b;
 .topPanel {
   display: flex;
   flex-direction: row;
-  padding: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
   justify-content: space-between;
   gap: 1rem;
 }
@@ -116,11 +117,11 @@ $border-color: #9b9b9b;
     cursor: pointer;
     transition: background-color 0.2s ease;
 
-    &[data-order="first"] {
+    &[data-order='first'] {
       border-radius: 8px 8px 0 0;
     }
 
-    &[data-order="last"] {
+    &[data-order='last'] {
       border-radius: 0 0 8px 8px;
     }
 

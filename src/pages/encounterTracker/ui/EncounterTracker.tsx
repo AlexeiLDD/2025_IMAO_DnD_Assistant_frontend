@@ -8,7 +8,7 @@ import { createChatBotMessage } from 'react-chatbot-kit';
 import { useDispatch, useSelector } from 'react-redux';
 import { Rnd } from 'react-rnd';
 
-import { EncounterState, EncounterStore } from 'entities/encounter/model';
+import { encounterActions, EncounterState, EncounterStore } from 'entities/encounter/model';
 import { loggerActions, LoggerState, LoggerStore } from 'widgets/chatbot/model';
 import { Chatbot } from 'widgets/chatbot/ui/Chatbot';
 import { BattleMap } from './battleMap';
@@ -23,7 +23,7 @@ import s from './EncounterTracker.module.scss';
 
 const DANGEON_MAP_IMAGE = 'https://encounterium.ru/map-images/plug-maps/cropped-map-1.png';
 const VILLAGE_MAP_IMAGE =
-  'https://encounterium.ru/map-images/plug-maps/Fantasy_Forest_Village_Battlemap_simple_compose_01.png';
+  'https://encounterium.ru/map-images/plug-maps/cropped-map-2.png';
 
 export const EncounterTracker = () => {
   const dispatch = useDispatch();
@@ -34,9 +34,14 @@ export const EncounterTracker = () => {
   const [mapImage, setMapImage] = useState(DANGEON_MAP_IMAGE);
 
   const { lastLog } = useSelector<LoggerStore>((state) => state.logger) as LoggerState;
-  const { participants } = useSelector<EncounterStore>(
+  const { participants, currentTurnIndex } = useSelector<EncounterStore>(
     (state) => state.encounter,
   ) as EncounterState;
+
+  useEffect(() => {
+    if (!participants.length) return;
+    dispatch(encounterActions.selectCreature(participants[currentTurnIndex].id));
+  }, [currentTurnIndex, participants]);
 
   useEffect(() => {
     if (lastLog) {

@@ -32,25 +32,25 @@ export const getDamageTypeOptions = (language: Language): SelectOption[] => [
 
 export const getLanguageOptions = (language: Language): SelectOption[] => [
   { value: 'All', label: language === 'ru' ? 'Все' : 'All' },
-  { value: 'Abyssal', label: 'Abyssal' },
-  { value: 'Aquan', label: 'Aquan' },
-  { value: 'Auran', label: 'Auran' },
+  { value: 'Abyssal', label: language === 'ru' ? 'Бездонный' : 'Abyssal' },
+  { value: 'Aquan', label: language === 'ru' ? 'Акван' : 'Aquan' },
+  { value: 'Auran', label: language === 'ru' ? 'Ауран' : 'Auran' },
   { value: 'Celestial', label: language === 'ru' ? 'Небесный' : 'Celestial' },
   { value: 'Common', label: language === 'ru' ? 'Общий' : 'Common' },
-  { value: 'Deep Speech', label: language === 'ru' ? 'Глубокая речь' : 'Deep Speech' },
+  { value: 'Deep Speech', label: language === 'ru' ? 'Глубинная речь' : 'Deep Speech' },
   { value: 'Draconic', label: language === 'ru' ? 'Драконий' : 'Draconic' },
   { value: 'Dwarvish', label: language === 'ru' ? 'Дварфийский' : 'Dwarvish' },
   { value: 'Elvish', label: language === 'ru' ? 'Эльфийский' : 'Elvish' },
-  { value: 'Giant', label: language === 'ru' ? 'Великанский' : 'Giant' },
+  { value: 'Giant', label: language === 'ru' ? 'Великаний' : 'Giant' },
   { value: 'Gnomish', label: language === 'ru' ? 'Гномий' : 'Gnomish' },
   { value: 'Goblin', label: language === 'ru' ? 'Гоблинский' : 'Goblin' },
   { value: 'Halfling', label: language === 'ru' ? 'Полуросликов' : 'Halfling' },
-  { value: 'Ignan', label: 'Ignan' },
+  { value: 'Ignan', label: language === 'ru' ? 'Игнан' : 'Ignan' },
   { value: 'Infernal', label: language === 'ru' ? 'Инфернальный' : 'Infernal' },
   { value: 'Orc', label: language === 'ru' ? 'Орочий' : 'Orc' },
   { value: 'Primordial', label: language === 'ru' ? 'Первобытный' : 'Primordial' },
-  { value: 'Sylvan', label: language === 'ru' ? 'Лесной' : 'Sylvan' },
-  { value: 'Terran', label: 'Terran' },
+  { value: 'Sylvan', label: language === 'ru' ? 'Сильван' : 'Sylvan' },
+  { value: 'Terran', label: language === 'ru' ? 'Терран' : 'Terran' },
   { value: 'Undercommon', label: language === 'ru' ? 'Подземный' : 'Undercommon' },
   { value: '*', label: language === 'ru' ? 'Другой' : 'Other' }
 ];
@@ -60,3 +60,11 @@ export const getUnderstandsSuffix = (language: Language, understandsBut: string)
     ? ` (понимает, но ${understandsBut})` 
     : ` (understands but ${understandsBut})`;
 };
+
+export const DAMAGE_DISPLAY_MAP: Record<string, string> = {
+  'дробящий, колющий и рубящий урон от немагических атак': 'Немагические атаки'
+};
+
+export const DAMAGE_INTERNAL_MAP = Object.fromEntries(
+  Object.entries(DAMAGE_DISPLAY_MAP).map(([key, value]) => [value, key])
+);

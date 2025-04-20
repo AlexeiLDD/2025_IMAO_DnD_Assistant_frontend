@@ -1,11 +1,11 @@
 import { Icon20Cancel } from '@vkontakte/icons';
 
-import { mapFiltersToRequestBody, useViewSettings, ViewSettingsProvider } from 'pages/bestiary/lib';
-import { Filters, OrderParams } from 'pages/bestiary/model';
+import { mapFiltersToRequestBody } from 'pages/bestiary/lib';
+import { Filters } from 'pages/bestiary/model';
 import { useEffect, useState } from 'react';
 import { throttle, useDebounce } from 'shared/lib';
 import { Spinner } from 'shared/ui/spinner';
-import { GetCharactersRequest, useGetCharactersQuery } from '../api';
+import { GetCharactersRequest, useLazyGetCharactersQuery } from '../api';
 import { CharacterClipped } from '../model';
 import { AddCharacterListForm } from './addCharacterListForm';
 import { CharacterCard } from './characterCard';
@@ -19,14 +19,6 @@ const DEBOUNCE_TIME = 500;
 const THROTTLE_TIME = 1000;
 
 export const Characters = () => {
-  return (
-    <ViewSettingsProvider>
-      <CharactersContent />
-    </ViewSettingsProvider>
-  );
-};
-
-const CharactersContent = () => {
   const [start, setStart] = useState(0);
   const [allCharacters, setAllCharacters] = useState<CharacterClipped[]>([]);
   const [searchValue, setSearchValue] = useState<string>('');
@@ -37,24 +29,15 @@ const CharactersContent = () => {
   const debouncedSearchValue = useDebounce(searchValue, DEBOUNCE_TIME);
   const setStartThrottled = throttle(setStart, THROTTLE_TIME);
 
-  const { viewMode, alphabetSort, ratingSort } = useViewSettings();
-
-  const orderParams: OrderParams[] = [
-    {
-      field: 'experience',
-      direction: ratingSort,
-    },
-    {
-      field: 'name',
-      direction: alphabetSort,
-    },
-  ];
-
   const [requestBody, setRequestBody] = useState<GetCharactersRequest>(
-    mapFiltersToRequestBody(filters, 0, RESPONSE_SIZE, debouncedSearchValue, orderParams),
+    mapFiltersToRequestBody(filters, 0, RESPONSE_SIZE, debouncedSearchValue),
   );
 
-  const { data: characters, isLoading, isError, status } = useGetCharactersQuery(requestBody);
+  const [trigger, { data: characters, isLoading, isError, status }] = useLazyGetCharactersQuery();
+
+  if (status == 'uninitialized') {
+    trigger(requestBody);
+  }
 
   const isPending = status === 'pending';
 
@@ -77,22 +60,12 @@ const CharactersContent = () => {
   useEffect(() => {
     setStart(0);
     setHasMore(true);
-    setRequestBody(
-      mapFiltersToRequestBody(filters, 0, RESPONSE_SIZE, debouncedSearchValue, orderParams),
-    );
+    setRequestBody(mapFiltersToRequestBody(filters, 0, RESPONSE_SIZE, debouncedSearchValue));
   }, [debouncedSearchValue, filters]);
 
   useEffect(() => {
-    setRequestBody(
-      mapFiltersToRequestBody(filters, start, RESPONSE_SIZE, debouncedSearchValue, orderParams),
-    );
+    setRequestBody(mapFiltersToRequestBody(filters, start, RESPONSE_SIZE, debouncedSearchValue));
   }, [start]);
-
-  useEffect(() => {
-    setRequestBody(
-      mapFiltersToRequestBody(filters, start, RESPONSE_SIZE, debouncedSearchValue, orderParams),
-    );
-  }, [alphabetSort, ratingSort]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -110,21 +83,11 @@ const CharactersContent = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isLoading, hasMore]);
 
-  if (isLoading)
-    return (
-      <div>
-        <h1>Мои персонажи</h1>
-        <div className={s.spinnerContainer}>
-          <Spinner size={100} />
-        </div>
-      </div>
-    );
-
   if (isError) return <div>Error loading characters</div>;
 
   return (
     <div>
-      <h1>Мои персонажи</h1>
+      <h1 className={s.title}>Мои персонажи</h1>
 
       <TopPanel
         searchValue={searchValue}
@@ -141,29 +104,31 @@ const CharactersContent = () => {
                 <Icon20Cancel />
               </div>
             </div>
-            <AddCharacterListForm />
+            <AddCharacterListForm reloadTrigger={trigger} requestBody={requestBody} />
           </div>
         </div>
       )}
 
-      <div className={s.bestiaryContainer}>
-        <div>
-          <AddNewCard handleAddNewCharacterClick={() => setIsModalOpen(true)} />
-        </div>
-        {allCharacters.map((character) => (
-          <div key={character.id}>
-            <CharacterCard character={character} viewMode={viewMode} />
-          </div>
-        ))}
-      </div>
+      {!isLoading && (
+        <div className={s.bestiaryContainer}>
+          {allCharacters.map((character) => (
+            <div key={character.id}>
+              <CharacterCard character={character} />
+            </div>
+          ))}
 
-      {isPending && (
+          <div>
+            <AddNewCard handleAddNewCharacterClick={() => setIsModalOpen(true)} />
+          </div>
+        </div>
+      )}
+
+      {(isPending || isLoading) && (
         <div className={s.spinnerContainer}>
           <Spinner size={100} />
         </div>
       )}
 
-      {isLoading && <div>Loading more characters...</div>}
       {allCharacters.length === 0 && !isLoading && <div>Ничего не найдено</div>}
     </div>
   );

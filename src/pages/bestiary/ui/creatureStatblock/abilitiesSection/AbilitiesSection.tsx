@@ -48,8 +48,8 @@ export const AbilitiesSection: React.FC<AbilitiesProps> = ({ creature }) => {
     {
       name: 'МДР',
       fullName: 'Мудрость',
-      value: creature?.ability.wiz,
-      modifier: modifiers[creature.ability.wiz],
+      value: creature?.ability.wis,
+      modifier: modifiers[creature.ability.wis],
     },
     {
       name: 'ХАР',

@@ -11,7 +11,8 @@ $card-width: 300px;
   flex-wrap: wrap;
   flex-direction: column;
   box-sizing: content-box;
-  height: max(calc(100% - 2rem), 595px);
+  min-height: 595px;
+  height: calc(100% - 2rem);
   width: $card-width;
 }
 
@@ -38,6 +39,7 @@ $card-width: 300px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    margin: auto;
     gap: 1rem;
   }
 }

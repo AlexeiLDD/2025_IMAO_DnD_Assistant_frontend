@@ -13,7 +13,13 @@ export const CustomCursor = () => {
   ) as EncounterState;
 
   useEffect(() => {
-    if (!attackHandleModeActive) return;
+    if (!attackHandleModeActive) {
+      document.body.removeAttribute('data-cursor');
+
+      return;
+    }
+
+    document.body.setAttribute('data-cursor', 'battle');
 
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });

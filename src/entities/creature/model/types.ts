@@ -31,6 +31,7 @@ export type CreatureFullData = {
   armorText?: string;
   armors?: Armor[];
   hits: HitPoints;
+  customHp?: string;
   speed: Speed[];
   ability: AbilityScores;
   savingThrows?: SavingThrow[];
@@ -40,7 +41,7 @@ export type CreatureFullData = {
   conditionImmunities?: string[];
   damageImmunities?: string[];
   senses: Senses;
-  languages: string[];
+  languages?: string[];
   feats?: Feat[];
   actions: Action[];
   bonusActions?: Action[];
@@ -51,6 +52,8 @@ export type CreatureFullData = {
   images: string[];
   environment?: string[];
   attacksLLM?: AttackLLM[];
+  useCustomSpeed?: boolean;
+  customSpeed?: string;
 };
 
 export type Reaction = {
@@ -131,6 +134,8 @@ export type HitPoints = {
 
 export type Speed = {
   value: number;
+  name?: string;
+  additional?: string;
 };
 
 export type AbilityScores = {
@@ -138,7 +143,7 @@ export type AbilityScores = {
   dex: number;
   con: number;
   int: number;
-  wiz: number;
+  wis: number;
   cha: number;
 };
 
@@ -149,13 +154,14 @@ export type Skill = {
 
 export type Senses = {
   passivePerception: string;
-  senses: Sense[];
+  senses?: Sense[];
 };
 
 
 type Sense = {
   name: string;
   value: number;
+  additional?: string;
 }
 
 export type Action = {

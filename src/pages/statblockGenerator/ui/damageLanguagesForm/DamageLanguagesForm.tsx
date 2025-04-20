@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
-import { DamageLanguagesLocalization } from 'pages/statblockGenerator/lib';
-import { 
-  DamageLanguagesFormProps, 
-  DamageListType 
-} from 'pages/statblockGenerator/model';
 import {
-  getDamageTypeOptions, 
+  generatedCreatureActions,
+  generatedCreatureSelectors,
+  GeneratedCreatureStore,
+  SINGLE_CREATURE_ID,
+} from 'entities/generatedCreature/model';
+import {
+  DAMAGE_DISPLAY_MAP,
+  DAMAGE_INTERNAL_MAP,
+  DamageLanguagesLocalization,
+  getDamageTypeOptions,
   getLanguageOptions,
-  getUnderstandsSuffix
 } from 'pages/statblockGenerator/lib';
+import { DamageLanguagesFormProps, DamageListType } from 'pages/statblockGenerator/model';
+import { CollapsiblePanel } from 'pages/statblockGenerator/ui/collapsiblePanel';
 import { DamageLanguageSection } from 'pages/statblockGenerator/ui/damageLanguagesForm/damageLanguageSection';
 import { ListGroup } from 'pages/statblockGenerator/ui/damageLanguagesForm/listGroup';
-import { CollapsiblePanel } from 'pages/statblockGenerator/ui/collapsiblePanel'
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { capitalizeFirstLetter } from 'shared/lib';
 import s from './DamageLanguagesForm.module.scss';
 
 export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
@@ -20,17 +26,53 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
   initialDamageImmunities = [],
   initialLanguages = [],
   initialTelepathy = 0,
-  language = 'en'
+  language = 'en',
 }) => {
   const t = DamageLanguagesLocalization[language];
-  
+
+  const dispatch = useDispatch();
+
+  const generatedCreature = useSelector((state: GeneratedCreatureStore) =>
+    generatedCreatureSelectors.selectById(state, SINGLE_CREATURE_ID),
+  );
+
   // Damage types state
   const [selectedDamageType, setSelectedDamageType] = useState<string>('acid');
   const [otherDamageType, setOtherDamageType] = useState<string>('');
   const [showOtherDamage, setShowOtherDamage] = useState<boolean>(false);
-  const [damageVulnerabilities, setDamageVulnerabilities] = useState<string[]>(initialDamageVulnerabilities);
+  const [damageVulnerabilities, setDamageVulnerabilities] = useState<string[]>(
+    initialDamageVulnerabilities,
+  );
   const [damageResistances, setDamageResistances] = useState<string[]>(initialDamageResistances);
   const [damageImmunities, setDamageImmunities] = useState<string[]>(initialDamageImmunities);
+
+  useEffect(() => {
+    if (!generatedCreature) return;
+
+    const formatDamageList = (list: string[] = []) =>
+      list.map((dmg) => capitalizeFirstLetter(DAMAGE_DISPLAY_MAP[dmg] || dmg));
+
+    setDamageVulnerabilities(formatDamageList(generatedCreature.damageVulnerabilities));
+    setDamageResistances(formatDamageList(generatedCreature.damageResistances));
+    setDamageImmunities(formatDamageList(generatedCreature.damageImmunities));
+
+    const parsedLanguages: string[] = [];
+    let parsedTelepathy = 0;
+
+    for (const entry of generatedCreature.languages ?? []) {
+      const normalized = entry.toLowerCase();
+
+      if (normalized.startsWith('телепатия')) {
+        const match = normalized.match(/\d+/);
+        parsedTelepathy = match ? parseInt(match[0], 10) : 0;
+      } else {
+        parsedLanguages.push(entry);
+      }
+    }
+
+    setLanguages(parsedLanguages);
+    setTelepathy(parsedTelepathy);
+  }, [generatedCreature]);
 
   // Languages state
   const [selectedLanguage, setSelectedLanguage] = useState<string>('Common');
@@ -49,54 +91,101 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
     setShowOtherDamage(value === '*');
   };
 
-  const addDamageType = (type: DamageListType) => {
-    const damageType = selectedDamageType === '*' 
-      ? otherDamageType 
-      : damageTypeOptions.find(opt => opt.value === selectedDamageType)?.label || selectedDamageType;
-    
-    if (!damageType) return;
-  
-    const newVulnerabilities = [...damageVulnerabilities];
-    const newResistances = [...damageResistances];
-    const newImmunities = [...damageImmunities];
-  
-    const removeFromAllLists = () => {
-      const indexV = newVulnerabilities.indexOf(damageType);
-      if (indexV > -1) newVulnerabilities.splice(indexV, 1);
-      
-      const indexR = newResistances.indexOf(damageType);
-      if (indexR > -1) newResistances.splice(indexR, 1);
-      
-      const indexI = newImmunities.indexOf(damageType);
-      if (indexI > -1) newImmunities.splice(indexI, 1);
-    };
-  
-    removeFromAllLists();
-  
-    switch (type) {
-      case 'vulnerabilities':
-        newVulnerabilities.push(damageType);
-        break;
-      case 'resistances':
-        newResistances.push(damageType);
-        break;
-      case 'immunities':
-        newImmunities.push(damageType);
-        break;
+  const updateLanguagesInRedux = (langs: string[], telepathy: number) => {
+    const result = [...langs];
+
+    if (telepathy > 0) {
+      result.push(`телепатия ${telepathy} фт.`);
     }
-  
-    setDamageVulnerabilities(newVulnerabilities);
-    setDamageResistances(newResistances);
-    setDamageImmunities(newImmunities);
+
+    dispatch(
+      generatedCreatureActions.setLanguages({
+        id: SINGLE_CREATURE_ID,
+        values: result,
+      }),
+    );
+  };
+
+  const addDamageType = (type: DamageListType) => {
+    const rawLabel =
+      selectedDamageType === '*'
+        ? otherDamageType
+        : damageTypeOptions.find((opt) => opt.value === selectedDamageType)?.label ||
+          selectedDamageType;
+
+    const displayLabel = capitalizeFirstLetter(rawLabel);
+    const internalLabel = DAMAGE_INTERNAL_MAP[displayLabel] || rawLabel.toLowerCase();
+
+    const all = {
+      vulnerabilities: [...damageVulnerabilities],
+      resistances: [...damageResistances],
+      immunities: [...damageImmunities],
+    };
+
+    // Удалим из всех
+    Object.keys(all).forEach((key) => {
+      all[key as DamageListType] = all[key as DamageListType].filter(
+        (item) => item !== displayLabel,
+      );
+    });
+
+    all[type].push(displayLabel);
+
+    // Обновим стейт компонента
+    setDamageVulnerabilities(all.vulnerabilities);
+    setDamageResistances(all.resistances);
+    setDamageImmunities(all.immunities);
+
+    // Обновим Redux
+    dispatch(
+      generatedCreatureActions.setDamageVulnerabilities({
+        id: SINGLE_CREATURE_ID,
+        values: all.vulnerabilities.map((d) => DAMAGE_INTERNAL_MAP[d] || d.toLowerCase()),
+      }),
+    );
+    dispatch(
+      generatedCreatureActions.setDamageResistances({
+        id: SINGLE_CREATURE_ID,
+        values: all.resistances.map((d) => DAMAGE_INTERNAL_MAP[d] || d.toLowerCase()),
+      }),
+    );
+    dispatch(
+      generatedCreatureActions.setDamageImmunities({
+        id: SINGLE_CREATURE_ID,
+        values: all.immunities.map((d) => DAMAGE_INTERNAL_MAP[d] || d.toLowerCase()),
+      }),
+    );
   };
 
   const removeDamageType = (type: DamageListType, index: number) => {
-    const setterMap = {
+    const currentList = {
+      vulnerabilities: damageVulnerabilities,
+      resistances: damageResistances,
+      immunities: damageImmunities,
+    }[type];
+
+    const updated = currentList.filter((_, i) => i !== index);
+
+    const setMap = {
       vulnerabilities: setDamageVulnerabilities,
       resistances: setDamageResistances,
-      immunities: setDamageImmunities
+      immunities: setDamageImmunities,
     };
-    setterMap[type](prev => prev.filter((_, i) => i !== index));
+
+    setMap[type](updated);
+
+    const reduxActionMap = {
+      vulnerabilities: generatedCreatureActions.setDamageVulnerabilities,
+      resistances: generatedCreatureActions.setDamageResistances,
+      immunities: generatedCreatureActions.setDamageImmunities,
+    };
+
+    dispatch(
+      reduxActionMap[type]({
+        id: SINGLE_CREATURE_ID,
+        values: updated.map((d) => DAMAGE_INTERNAL_MAP[d] || d.toLowerCase()),
+      }),
+    );
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -106,22 +195,28 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
   };
 
   const addLanguage = (speaks: boolean) => {
-    let languageText = selectedLanguage === '*' ? otherLanguage : 
-      languageOptions.find(opt => opt.value === selectedLanguage)?.label || selectedLanguage;
-    
-    if (!languageText) return;
+    let lang =
+      selectedLanguage === '*'
+        ? otherLanguage
+        : languageOptions.find((opt) => opt.value === selectedLanguage)?.label || selectedLanguage;
+
+    if (!lang) return;
 
     if (!speaks) {
-      languageText += getUnderstandsSuffix(language, understandsBut);
+      lang += ` (${understandsBut})`;
     }
 
-    if (!languages.includes(languageText)) {
-      setLanguages([...languages, languageText]);
+    if (!languages.includes(lang)) {
+      const newLangs = [...languages, lang];
+      setLanguages(newLangs);
+      updateLanguagesInRedux(newLangs, telepathy);
     }
   };
 
   const removeLanguage = (index: number) => {
-    setLanguages(prev => prev.filter((_, i) => i !== index));
+    const updated = languages.filter((_, i) => i !== index);
+    setLanguages(updated);
+    updateLanguagesInRedux(updated, telepathy);
   };
 
   return (
@@ -135,7 +230,7 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
               onChange={handleDamageTypeChange}
               className={s.damageLanguagesPanel__select}
             >
-              {damageTypeOptions.map(option => (
+              {damageTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -144,7 +239,7 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
 
             {showOtherDamage && (
               <input
-                type="text"
+                type='text'
                 value={otherDamageType}
                 onChange={(e) => setOtherDamageType(e.target.value)}
                 placeholder={t.customDamagePlaceholder}
@@ -154,41 +249,50 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
           </div>
 
           <div className={s.damageLanguagesPanel__buttons}>
-            <button 
-              type="button" 
+            <button
+              type='button'
               onClick={() => addDamageType('vulnerabilities')}
               className={`${s.damageLanguagesPanel__button} ${
                 damageVulnerabilities.includes(
-                  selectedDamageType === '*' 
-                    ? otherDamageType 
-                    : damageTypeOptions.find(opt => opt.value === selectedDamageType)?.label || selectedDamageType
-                ) ? s.damageLanguagesPanel__buttonActive : ''
+                  selectedDamageType === '*'
+                    ? otherDamageType
+                    : damageTypeOptions.find((opt) => opt.value === selectedDamageType)?.label ||
+                        selectedDamageType,
+                )
+                  ? s.damageLanguagesPanel__buttonActive
+                  : ''
               }`}
             >
               {t.vulnerabilities}
             </button>
-            <button 
-              type="button" 
+            <button
+              type='button'
               onClick={() => addDamageType('resistances')}
               className={`${s.damageLanguagesPanel__button} ${
                 damageResistances.includes(
-                  selectedDamageType === '*' 
-                    ? otherDamageType 
-                    : damageTypeOptions.find(opt => opt.value === selectedDamageType)?.label || selectedDamageType
-                ) ? s.damageLanguagesPanel__buttonActive : ''
+                  selectedDamageType === '*'
+                    ? otherDamageType
+                    : damageTypeOptions.find((opt) => opt.value === selectedDamageType)?.label ||
+                        selectedDamageType,
+                )
+                  ? s.damageLanguagesPanel__buttonActive
+                  : ''
               }`}
             >
               {t.resistances}
             </button>
-            <button 
-              type="button" 
+            <button
+              type='button'
               onClick={() => addDamageType('immunities')}
               className={`${s.damageLanguagesPanel__button} ${
                 damageImmunities.includes(
-                  selectedDamageType === '*' 
-                    ? otherDamageType 
-                    : damageTypeOptions.find(opt => opt.value === selectedDamageType)?.label || selectedDamageType
-                ) ? s.damageLanguagesPanel__buttonActive : ''
+                  selectedDamageType === '*'
+                    ? otherDamageType
+                    : damageTypeOptions.find((opt) => opt.value === selectedDamageType)?.label ||
+                        selectedDamageType,
+                )
+                  ? s.damageLanguagesPanel__buttonActive
+                  : ''
               }`}
             >
               {t.immunities}
@@ -233,7 +337,7 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
               onChange={handleLanguageChange}
               className={s.damageLanguagesPanel__select}
             >
-              {languageOptions.map(option => (
+              {languageOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -242,7 +346,7 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
 
             {showOtherLanguage && (
               <input
-                type="text"
+                type='text'
                 value={otherLanguage}
                 onChange={(e) => setOtherLanguage(e.target.value)}
                 placeholder={t.customDamagePlaceholder}
@@ -255,10 +359,10 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
             <label className={s.damageLanguagesPanel__label}>
               {t.telepathy}
               <input
-                type="number"
-                min="0"
-                max="995"
-                step="5"
+                type='number'
+                min='0'
+                max='995'
+                step='5'
                 value={telepathy}
                 onChange={(e) => setTelepathy(parseInt(e.target.value) || 0)}
                 className={s.damageLanguagesPanel__numberInput}
@@ -269,26 +373,26 @@ export const DamageLanguagesForm: React.FC<DamageLanguagesFormProps> = ({
 
           <div className={s.damageLanguagesPanel__languageControls}>
             <div className={s.damageLanguagesPanel__languageButtons}>
-              <button 
-                type="button" 
+              <button
+                type='button'
                 onClick={() => addLanguage(true)}
                 className={s.damageLanguagesPanel__button}
               >
                 {t.speaks}
               </button>
-              <button 
-                type="button" 
+              <button
+                type='button'
                 onClick={() => addLanguage(false)}
                 className={s.damageLanguagesPanel__button}
               >
                 {t.understands}
               </button>
             </div>
-            
+
             <div className={s.damageLanguagesPanel__understandsBut}>
               <span>{language === 'ru' ? 'но' : 'but'}</span>
               <input
-                type="text"
+                type='text'
                 value={understandsBut}
                 onChange={(e) => setUnderstandsBut(e.target.value)}
                 className={s.damageLanguagesPanel__understandsInput}

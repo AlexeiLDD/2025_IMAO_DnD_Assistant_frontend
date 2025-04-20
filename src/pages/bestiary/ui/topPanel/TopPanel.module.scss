@@ -2,6 +2,13 @@ $border-color: #9b9b9b;
 $medium-screen: 900px;
 
 .topPanel {
+  position: sticky;
+  padding-top: 2rem;
+  padding-bottom: 0.8rem;
+  top: -1.2rem;
+  background-color: var(--global-bg-color);
+  z-index: 98;
+
   &__title {
     margin-top: 0;
     margin-bottom: 1rem;
@@ -58,7 +65,7 @@ $medium-screen: 900px;
   }
 }
 
-@media(max-width: $medium-screen) {
+@media (max-width: $medium-screen) {
   .additionsContainer {
     justify-content: space-between;
     width: 100%;
@@ -143,11 +150,11 @@ $medium-screen: 900px;
     cursor: pointer;
     transition: background-color 0.2s ease;
 
-    &[data-order="first"] {
+    &[data-order='first'] {
       border-radius: 8px 8px 0 0;
     }
 
-    &[data-order="last"] {
+    &[data-order='last'] {
       border-radius: 0 0 8px 8px;
     }
 

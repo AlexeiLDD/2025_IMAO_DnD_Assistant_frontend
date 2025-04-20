@@ -1,16 +1,25 @@
 import { Icon28AddSquareOutline } from '@vkontakte/icons';
 import { useState } from 'react';
 
+import { GetCharactersRequest, useAddCharacterMutation } from 'pages/characters/api';
+
+import clsx from 'clsx';
 import LssLogo from 'shared/assets/images/long_story_short_logo.tsx';
 import s from './AddCharacterListForm.module.scss';
 
-export const AddCharacterListForm = () => {
+type AddCharacterListFormProps = {
+  reloadTrigger: (arg: GetCharactersRequest, preferCacheValue?: boolean) => unknown;
+  requestBody: GetCharactersRequest;
+};
+
+export const AddCharacterListForm = ({ reloadTrigger, requestBody }: AddCharacterListFormProps) => {
   const [file, setFile] = useState<File>();
   const [jsonData, setJsonData] = useState(null);
   const [fileName, setFileName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const [uploadFile, { isLoading }] = useAddCharacterMutation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target?.files?.[0];
@@ -42,7 +51,6 @@ export const AddCharacterListForm = () => {
       return;
     }
 
-    setIsLoading(true);
     setError('');
     setSuccess('');
 
@@ -50,29 +58,22 @@ export const AddCharacterListForm = () => {
       const formData = new FormData();
       formData.append('characterFile', file);
 
-      const response = await fetch('/api/character/add_character', {
-        method: 'POST',
-        body: formData,
-      });
+      await uploadFile(formData).unwrap();
 
-      if (!response.ok) {
-        throw new Error(`Ошибка сервера: ${response.status}`);
-      }
-
-      if (!response.ok) {
-        throw new Error(`Ошибка сервера: ${response.status}`);
-      }
       setSuccess('Файл успешно отправлен!');
+
+      reloadTrigger(requestBody, false);
     } catch (err) {
-      setError(`Ошибка при отправке: ${err}`);
-    } finally {
-      setIsLoading(false);
+      setError(`Ошибка при отправке: ${(err as Error).message}`);
     }
   };
 
   return (
     <div className={s.formContainer}>
-      <form className={s.addCharacterForm} onSubmit={handleSubmit}>
+      <form
+        className={clsx(s.addCharacterForm, { [s.marginTop5Rem]: jsonData })}
+        onSubmit={handleSubmit}
+      >
         <div className={s.lssContainer}>
           <a href='https://longstoryshort.app/characters/list/' target='_blank'>
             <LssLogo />

@@ -1,18 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { TypeFormLocalization } from 'pages/statblockGenerator/lib';
-import { TypeFormProps, TypeFormState, CreatureSize} from 'pages/statblockGenerator/model';
-import { FormElement } from 'pages/statblockGenerator/ui/typeForm/formElement';
-import { CollapsiblePanel } from 'pages/statblockGenerator/ui/collapsiblePanel';
-import { RootState } from 'app/store';
-
-import { useDispatch, useSelector  } from 'react-redux';
 import {
+  TypeFormLocalization,
+  getCellSizeDescription,
+  getKeyByLocalizedValue,
+  mapCreatureSize,
+  mapCreatureType,
+} from 'pages/statblockGenerator/lib';
+import { CreatureSize, TypeFormProps, TypeFormState } from 'pages/statblockGenerator/model';
+import { CollapsiblePanel } from 'pages/statblockGenerator/ui/collapsiblePanel';
+import { FormElement } from 'pages/statblockGenerator/ui/typeForm/formElement';
+import React, { useEffect, useState } from 'react';
+import { capitalizeFirstLetter, lowercaseFirstLetter } from 'shared/lib';
+//import { RootState } from 'app/store';
+
+import {
+  GeneratedCreatureStore,
   SINGLE_CREATURE_ID,
   generatedCreatureActions,
   generatedCreatureSelectors,
-  GeneratedCreatureStore,
-
 } from 'entities/generatedCreature/model';
+import { useDispatch, useSelector } from 'react-redux';
 
 // import type {
 //   CreatureFullData
@@ -20,24 +26,23 @@ import {
 
 import s from './TypeForm.module.scss';
 
-export const TypeForm: React.FC<TypeFormProps> = ({
-  language = 'en'
-}) => {
-
+export const TypeForm: React.FC<TypeFormProps> = ({ language = 'en' }) => {
   const generatedCreature = useSelector((state: GeneratedCreatureStore) =>
-    generatedCreatureSelectors.selectById(state, SINGLE_CREATURE_ID)
+    generatedCreatureSelectors.selectById(state, SINGLE_CREATURE_ID),
   );
 
   const [state, setState] = useState<TypeFormState>({
     name: generatedCreature?.name?.rus || 'Monster',
-    size: (['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'].includes(generatedCreature?.size?.eng) 
-           ? generatedCreature.size.eng 
-           : 'medium') as CreatureSize,
+    size: (['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'].includes(
+      generatedCreature?.size?.eng,
+    )
+      ? generatedCreature.size.eng
+      : 'medium') as CreatureSize,
     type: generatedCreature?.type?.name || 'beast',
     tag: generatedCreature?.tags?.[0]?.name || '',
     alignment: generatedCreature?.alignment || 'any alignment',
     otherType: '*', // или другое значение по умолчанию
-    showOtherType: generatedCreature?.type?.name === '*'
+    showOtherType: generatedCreature?.type?.name === '*',
   });
 
   const t = TypeFormLocalization[language];
@@ -55,78 +60,95 @@ export const TypeForm: React.FC<TypeFormProps> = ({
 
   useEffect(() => {
     if (generatedCreature) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        name: generatedCreature.name?.eng || prev.name,
-        size: (['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'].includes(generatedCreature?.size?.eng) 
-           ? generatedCreature.size.eng 
-           : 'medium') as CreatureSize,
-        type: generatedCreature.type?.name || prev.type,
+        name: generatedCreature.name?.rus || prev.name,
+        size: (['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'].includes(
+          generatedCreature?.size?.eng,
+        )
+          ? generatedCreature.size.eng
+          : 'medium') as CreatureSize,
+        type: getKeyByLocalizedValue(generatedCreature.type?.name, 'types') || prev.type,
         tag: generatedCreature.tags?.[0]?.name || prev.tag,
         alignment: generatedCreature.alignment || prev.alignment,
-        showOtherType: generatedCreature.type?.name === '*'
+        showOtherType: generatedCreature.type?.name === '*',
       }));
     }
   }, [generatedCreature]);
 
-  const handleChange = (field: keyof TypeFormState) => 
+  const handleChange =
+    (field: keyof TypeFormState) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const newValue = e.target.value;
-      setState(prev => ({ ...prev, [field]: newValue }));
+      setState((prev) => ({ ...prev, [field]: newValue }));
 
-      switch(field) {
+      switch (field) {
         case 'name':
-          dispatch(generatedCreatureActions.updateCreatureName({
-            id: SINGLE_CREATURE_ID, 
-            name: {
-              rus: newValue,
-              eng: newValue,
-            }
-          }));
+          dispatch(
+            generatedCreatureActions.updateCreatureName({
+              id: SINGLE_CREATURE_ID,
+              name: {
+                rus: newValue,
+                eng: newValue,
+              },
+            }),
+          );
           break;
         case 'size':
-          dispatch(generatedCreatureActions.updateCreatureSize({
-            id: SINGLE_CREATURE_ID, 
-            size: {
-              rus: newValue,
-              eng: newValue,
-              cell: '1'
-            }
-          }));
+          dispatch(
+            generatedCreatureActions.updateCreatureSize({
+              id: SINGLE_CREATURE_ID,
+              size: {
+                rus: mapCreatureSize(capitalizeFirstLetter(newValue), 'en', 'ru') || '',
+                eng: newValue,
+                cell: getCellSizeDescription(newValue) || '1 клетка',
+              },
+            }),
+          );
           break;
         case 'type':
-          dispatch(generatedCreatureActions.updateCreatureType({
-            id: SINGLE_CREATURE_ID, 
-            type: {
-              name: newValue,
-              tags: []
-            }
-          }));
+          dispatch(
+            generatedCreatureActions.updateCreatureType({
+              id: SINGLE_CREATURE_ID,
+              type: {
+                name: lowercaseFirstLetter(
+                  mapCreatureType(capitalizeFirstLetter(newValue), 'en', 'ru') || '',
+                ),
+                tags: [],
+              },
+            }),
+          );
           if (newValue === '*') {
-            setState(prev => ({ ...prev, showOtherType: true }));
+            setState((prev) => ({ ...prev, showOtherType: true }));
           } else {
-            setState(prev => ({ ...prev, showOtherType: false }));
+            setState((prev) => ({ ...prev, showOtherType: false }));
           }
           break;
         case 'tag':
-          dispatch(generatedCreatureActions.updateTags({
-            id: SINGLE_CREATURE_ID, 
-            tags: [{
-              name: newValue,
-              description: `Description for ${newValue}`
-            }]
-          }));
+          dispatch(
+            generatedCreatureActions.updateTags({
+              id: SINGLE_CREATURE_ID,
+              tags: [
+                {
+                  name: newValue,
+                  description: `Description for ${newValue}`,
+                },
+              ],
+            }),
+          );
           break;
         case 'alignment':
-          dispatch(generatedCreatureActions.updateAlignment({
-            id: SINGLE_CREATURE_ID,
-            alignment: newValue
-          }));
+          dispatch(
+            generatedCreatureActions.updateAlignment({
+              id: SINGLE_CREATURE_ID,
+              alignment: newValue,
+            }),
+          );
           break;
         // case 'otherType':
         //   dispatch(generatedCreatureActions.setOtherType(newValue));
         //   break;
-        }
+      }
     };
 
   return (
@@ -134,7 +156,7 @@ export const TypeForm: React.FC<TypeFormProps> = ({
       <div className={s.creaturePanel__statsContainer}>
         <FormElement label={t.name}>
           <input
-            type="text"
+            type='text'
             value={state.name}
             onChange={handleChange('name')}
             className={s.creaturePanel__statsElement__input}
@@ -148,7 +170,9 @@ export const TypeForm: React.FC<TypeFormProps> = ({
             className={s.creaturePanel__statsElement__select}
           >
             {Object.entries(t.sizes).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
+              <option key={key} value={key}>
+                {label}
+              </option>
             ))}
           </select>
         </FormElement>
@@ -161,13 +185,15 @@ export const TypeForm: React.FC<TypeFormProps> = ({
               className={s.creaturePanel__statsElement__select}
             >
               {Object.entries(t.types).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
+                <option key={key} value={key}>
+                  {label}
+                </option>
               ))}
-              <option value="*">{t.types.other}</option>
+              <option value='*'>{t.types.other}</option>
             </select>
             {state.showOtherType && (
               <input
-                type="text"
+                type='text'
                 value={state.otherType}
                 onChange={handleChange('otherType')}
                 className={s.creaturePanel__statsElement__input}
@@ -179,7 +205,7 @@ export const TypeForm: React.FC<TypeFormProps> = ({
 
         <FormElement label={t.tag}>
           <input
-            type="text"
+            type='text'
             value={state.tag}
             onChange={handleChange('tag')}
             className={s.creaturePanel__statsElement__input}
@@ -188,7 +214,7 @@ export const TypeForm: React.FC<TypeFormProps> = ({
 
         <FormElement label={t.alignment}>
           <input
-            type="text"
+            type='text'
             value={state.alignment}
             onChange={handleChange('alignment')}
             className={s.creaturePanel__statsElement__input}
@@ -196,6 +222,5 @@ export const TypeForm: React.FC<TypeFormProps> = ({
         </FormElement>
       </div>
     </CollapsiblePanel>
-    
   );
 };

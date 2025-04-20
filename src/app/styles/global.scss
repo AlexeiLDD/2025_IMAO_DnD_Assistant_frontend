@@ -15,7 +15,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
 
   font-synthesis: none;
@@ -23,13 +23,14 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
+  --global-bg-color: #242424;
   --primary-bg-color: #2a2a40;
   --secondary-bg-color: #3a3a50;
 
   --primary-btn-color: #ff6f61;
   --secondary-btn-color: #ec9ded;
   --accent-btn-color: #e2c044;
-  
+
   --toast-bg-color: #121212;
 
   // for dice rotation
@@ -49,6 +50,7 @@
 
 main {
   width: 80vw;
+
   @media (max-width: 768px) {
     width: 100vw;
   }
@@ -65,6 +67,12 @@ body {
   padding: 0;
   width: 100%;
   background-color: transparent;
+
+  &[data-cursor='battle'] {
+    cursor:
+      url(../../shared/assets/images/icons8-battle-32.png) 4 5,
+      pointer !important;
+  }
 }
 
 h1 {

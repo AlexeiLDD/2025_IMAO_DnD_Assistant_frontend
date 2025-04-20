@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  // max-width: 500px;
   flex-grow: 1;
   padding: 1rem 7rem;
   overflow-y: auto;
@@ -15,10 +14,11 @@
 
     .lssContainer {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       gap: 0.5rem;
       align-items: center;
-      padding: 0.5rem;
+      text-align: center;
+      padding: 0.7rem;
       font-size: 1.1rem;
       color: var(--accent-btn-color);
     }
@@ -78,4 +78,8 @@
       margin-bottom: 2rem;
     }
   }
+}
+
+.marginTop5Rem {
+  margin-top: 5rem;
 }

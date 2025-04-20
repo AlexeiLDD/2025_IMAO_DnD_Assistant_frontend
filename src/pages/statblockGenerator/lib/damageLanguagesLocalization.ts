@@ -32,7 +32,7 @@ export const DamageLanguagesLocalization = {
     telepathy: 'Телепатия',
     speaks: 'Говорит',
     understands: 'Понимает',
-    understandsBut: 'но не говорит',
+    understandsBut: 'не говорит',
     addLanguage: 'Добавить язык',
     remove: 'Удалить',
     units: 'фт.',
