@@ -2,6 +2,7 @@ import { VKLogin } from 'pages/login/ui/vkLogin';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import s from './Login.module.scss';
+import logo from '/src/shared/assets/images/logo.png';
 
 export const Login = () => {
   const [isAuthenticated, _setIsAuthenticated] = useState<boolean>(false);
@@ -23,7 +24,7 @@ export const Login = () => {
       <div className={s.authForm}>
         <div className={s.authForm__logoContainer}>
           <Link to='/'>
-            <img className={s.logo} src='/src/shared/assets/images/logo.png' alt='Logo Image' />
+            <img className={s.logo} src={logo} alt='Logo Image' />
           </Link>
           <div className={s.authForm__title}>Войти в Encounterium</div>
         </div>
