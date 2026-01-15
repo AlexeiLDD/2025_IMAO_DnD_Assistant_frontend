@@ -12,6 +12,7 @@ import {
   generatedCreatureSelectors,
 } from 'entities/generatedCreature/model';
 import { CreatureStatblock } from 'pages/bestiary';
+import { bestiaryApi } from 'pages/bestiary/api';
 import { JumpTarget } from 'pages/bestiary/model';
 import {
   GetCreaturesRequest,
@@ -117,15 +118,19 @@ export const StatblockGenerator = () => {
     setSelectedPreset(text);
   };
 
+  const dispatch = useDispatch<AppDispatch>();
+
   useEffect(() => {
     if (isSuccess) {
       toast.success('Существо успешно сохранено!');
+      // Invalidate bestiaryApi cache so user creature lists refresh
+      dispatch(bestiaryApi.util.invalidateTags(['Creature']));
     }
     if (isError) {
       toast.error('Не удалось сохранить существо 😢');
       console.error('Ошибка:', error);
     }
-  }, [isSuccess, isError, error]);
+  }, [isSuccess, isError, error, dispatch]);
 
   const onSave = () => {
     if (!generatedCreature) {
@@ -142,8 +147,6 @@ export const StatblockGenerator = () => {
   
     void addCreature(generatedCreature); // без unwrap
   };
-
-  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     if (fullCreatureData) {

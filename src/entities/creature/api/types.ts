@@ -24,3 +24,11 @@ export type FilterParams = {
   features: string[];
   environment: string[];
 };
+
+export type GetCreaturesRequest = {
+  start: number;
+  size: number;
+  search: SearchParams;
+  order: OrderParams[];
+  filter: FilterParams;
+};

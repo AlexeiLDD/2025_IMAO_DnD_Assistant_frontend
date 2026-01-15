@@ -1,16 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { GetCreaturesRequest } from 'entities/creature/api';
 import { CreatureClippedData, CreatureFullData } from 'entities/creature/model';
 
 import { insertAfterSecondSlash } from '../lib';
-import type { FilterParams, OrderParams, SearchParams } from './types';
-
-export type GetCreaturesRequest = {
-  start: number;
-  size: number;
-  search: SearchParams;
-  order: OrderParams[];
-  filter: FilterParams;
-};
 
 const bestiaryApi = createApi({
   reducerPath: 'bestiaryApi',
@@ -23,10 +15,12 @@ const bestiaryApi = createApi({
         method: 'POST',
         body,
       }),
+      providesTags: ['Creature'],
     }),
 
     getCreatureByName: builder.query<CreatureFullData, string>({
       query: (name) => ({ url: name }),
+      providesTags: ['Creature'],
     }),
 
     getUserCreatures: builder.query<CreatureClippedData[], GetCreaturesRequest>({
@@ -35,10 +29,12 @@ const bestiaryApi = createApi({
         method: 'POST',
         body,
       }),
+      providesTags: ['Creature'],
     }),
 
     getUserCreatureByName: builder.query<CreatureFullData, string>({
       query: (name) => ({ url: insertAfterSecondSlash(name, 'usr_content') }),
+      providesTags: ['Creature'],
     }),
   }),
 });

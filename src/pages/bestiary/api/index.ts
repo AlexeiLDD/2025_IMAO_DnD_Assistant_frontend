@@ -8,4 +8,4 @@ export {
   useLazyGetUserCreatureByNameQuery,
 } from './bestiary.api';
 
-export type { GetCreaturesRequest } from './bestiary.api';
+export type { GetCreaturesRequest } from 'entities/creature/api';

@@ -5,4 +5,4 @@ export {
   useLazyGetCreatureByNameQuery,
 } from './statblockGenerator.api';
 
-export type { GetCreaturesRequest } from './statblockGenerator.api';
+export type { GetCreaturesRequest } from 'entities/creature/api';

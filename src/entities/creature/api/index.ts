@@ -3,6 +3,4 @@ export type {
   GetCreaturesRequest,
   OrderParams,
   SearchParams,
-} from './api';
-
-export { creaturesReduser } from './model';
+} from './types';

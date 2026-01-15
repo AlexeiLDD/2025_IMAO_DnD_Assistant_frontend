@@ -1,15 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { GetCreaturesRequest } from 'entities/creature/api';
 import { CreatureClippedData, CreatureFullData } from 'entities/creature/model';
-
-import type { FilterParams, OrderParams, SearchParams } from './types';
-
-export type GetCreaturesRequest = {
-  start: number;
-  size: number;
-  search: SearchParams;
-  order: OrderParams[];
-  filter: FilterParams;
-};
 
 const statblockGeneratorApi = createApi({
   reducerPath: 'statblockGeneratorApi',
@@ -27,6 +18,7 @@ const statblockGeneratorApi = createApi({
 
     getCreatureByName: builder.query<CreatureFullData, string>({
       query: (name) => ({ url: name }),
+      providesTags: ['Creature'],
     }),
 
     addCreature: builder.mutation<void, CreatureFullData>({
