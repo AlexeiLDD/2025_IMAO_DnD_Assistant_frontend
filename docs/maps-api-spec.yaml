@@ -1,0 +1,565 @@
+openapi: 3.0.3
+info:
+  title: Encounterium Maps API
+  description: |
+    REST API for persisting user-created maps from the MapEditor.
+
+    ## Authentication
+    All endpoints require authentication via session cookie or JWT Bearer token.
+    The `userId` is determined server-side from the authenticated session.
+    Clients do NOT send `userId` in create/update requests.
+
+    ## Forward Compatibility Notes
+    - The `schemaVersion` field allows future schema migrations
+    - Tiles may have `widthUnits`/`heightUnits` in the future (map schema already supports arbitrary tile sizes)
+    - `walkableMask`/`occupancyMask` belong to tile metadata (entities/mapTiles), NOT the map payload
+    - The `layer` field on placements is reserved for future stacking support
+    - Placement positions use microcell units (currently 1 macro cell = 8 microcells)
+  version: 1.0.0
+  contact:
+    name: Encounterium Team
+
+servers:
+  - url: /api
+    description: Application API base
+
+security:
+  - cookieAuth: []
+  - bearerAuth: []
+
+tags:
+  - name: Maps
+    description: User map CRUD operations
+
+paths:
+  /maps:
+    get:
+      tags:
+        - Maps
+      summary: List maps for current user
+      description: |
+        Returns a paginated list of maps owned by the authenticated user.
+        Results are ordered by `updatedAt` descending (most recent first).
+      operationId: listMyMaps
+      parameters:
+        - name: start
+          in: query
+          description: Pagination offset (0-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          description: Maximum number of results to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+      responses:
+        '200':
+          description: List of map metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MapMetadata'
+              example:
+                - id: "550e8400-e29b-41d4-a716-446655440000"
+                  userId: 12345
+                  name: "Tavern Battle"
+                  createdAt: "2026-01-15T10:30:00Z"
+                  updatedAt: "2026-01-15T14:22:00Z"
+                - id: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                  userId: 12345
+                  name: "Forest Ambush"
+                  createdAt: "2026-01-14T08:00:00Z"
+                  updatedAt: "2026-01-14T08:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Maps
+      summary: Create a new map
+      description: |
+        Creates a new map for the authenticated user.
+        The `userId` is set automatically from the session.
+      operationId: createMap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMapRequest'
+            example:
+              name: "Tavern Battle"
+              data:
+                schemaVersion: 1
+                widthUnits: 64
+                heightUnits: 64
+                placements:
+                  - id: "cell:0:0"
+                    tileId: "stone-floor-01"
+                    x: 0
+                    y: 0
+                    rot: 0
+                  - id: "cell:1:1"
+                    tileId: "wooden-table-01"
+                    x: 8
+                    y: 8
+                    rot: 1
+                    layer: 1
+      responses:
+        '201':
+          description: Map created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapFull'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                userId: 12345
+                name: "Tavern Battle"
+                createdAt: "2026-01-15T10:30:00Z"
+                updatedAt: "2026-01-15T10:30:00Z"
+                data:
+                  schemaVersion: 1
+                  widthUnits: 64
+                  heightUnits: 64
+                  placements:
+                    - id: "cell:0:0"
+                      tileId: "stone-floor-01"
+                      x: 0
+                      y: 0
+                      rot: 0
+                    - id: "cell:1:1"
+                      tileId: "wooden-table-01"
+                      x: 8
+                      y: 8
+                      rot: 1
+                      layer: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /maps/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Map UUID
+        schema:
+          type: string
+          format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+
+    get:
+      tags:
+        - Maps
+      summary: Get map by ID
+      description: |
+        Returns the full map including all placement data.
+        User must own the map or have appropriate permissions.
+      operationId: getMapById
+      responses:
+        '200':
+          description: Map details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapFull'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                userId: 12345
+                name: "Tavern Battle"
+                createdAt: "2026-01-15T10:30:00Z"
+                updatedAt: "2026-01-15T14:22:00Z"
+                data:
+                  schemaVersion: 1
+                  widthUnits: 64
+                  heightUnits: 64
+                  placements:
+                    - id: "cell:0:0"
+                      tileId: "stone-floor-01"
+                      x: 0
+                      y: 0
+                      rot: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Maps
+      summary: Update an existing map
+      description: |
+        Updates the map data and/or name.
+        User must own the map. The `updatedAt` timestamp is set server-side.
+      operationId: updateMap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMapRequest'
+            example:
+              name: "Tavern Battle - Updated"
+              data:
+                schemaVersion: 1
+                widthUnits: 64
+                heightUnits: 64
+                placements:
+                  - id: "cell:0:0"
+                    tileId: "stone-floor-01"
+                    x: 0
+                    y: 0
+                    rot: 0
+                  - id: "cell:2:2"
+                    tileId: "barrel-01"
+                    x: 16
+                    y: 16
+                    rot: 2
+      responses:
+        '200':
+          description: Map updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapFull'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+    delete:
+      tags:
+        - Maps
+      summary: Delete a map
+      description: |
+        Permanently deletes the map.
+        User must own the map.
+      operationId: deleteMap
+      responses:
+        '204':
+          description: Map deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Session cookie set after VK OAuth login
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for API access
+
+  schemas:
+    Rotation:
+      type: integer
+      enum: [0, 1, 2, 3]
+      description: |
+        Rotation index representing angle:
+        - 0 = 0° (no rotation)
+        - 1 = 90° clockwise
+        - 2 = 180°
+        - 3 = 270° clockwise (or 90° counter-clockwise)
+
+    Placement:
+      type: object
+      required:
+        - id
+        - tileId
+        - x
+        - y
+        - rot
+      properties:
+        id:
+          type: string
+          description: |
+            Stable unique identifier for this placement within the map.
+            Convention: "cell:{row}:{col}" for grid-aligned placements.
+          example: "cell:2:3"
+        tileId:
+          type: string
+          description: Reference to a tile definition in entities/mapTiles
+          example: "stone-floor-01"
+        x:
+          type: integer
+          minimum: 0
+          description: |
+            X position in microcell units (top-left anchor).
+            For current editor: must be divisible by 8 (MACRO_CELL_UNITS).
+          example: 24
+        y:
+          type: integer
+          minimum: 0
+          description: |
+            Y position in microcell units (top-left anchor).
+            For current editor: must be divisible by 8 (MACRO_CELL_UNITS).
+          example: 16
+        rot:
+          $ref: '#/components/schemas/Rotation'
+        layer:
+          type: integer
+          minimum: 0
+          default: 0
+          description: |
+            Layer for stacking (reserved for future use).
+            Higher layers render on top of lower layers.
+          example: 0
+
+    MapData:
+      type: object
+      required:
+        - schemaVersion
+        - widthUnits
+        - heightUnits
+        - placements
+      properties:
+        schemaVersion:
+          type: integer
+          enum: [1]
+          description: |
+            Schema version for forward compatibility.
+            Currently only version 1 is supported.
+            Future versions may add new fields or change validation rules.
+          example: 1
+        widthUnits:
+          type: integer
+          minimum: 1
+          description: |
+            Total map width in microcell units.
+            For current editor: must be divisible by 8 and result in 1-64 macro cells.
+          example: 64
+        heightUnits:
+          type: integer
+          minimum: 1
+          description: |
+            Total map height in microcell units.
+            For current editor: must be divisible by 8 and result in 1-64 macro cells.
+          example: 64
+        placements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Placement'
+          description: List of tile placements on the map
+
+    MapMetadata:
+      type: object
+      required:
+        - id
+        - userId
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique map identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        userId:
+          type: integer
+          description: Owner's user ID (from auth system)
+          example: 12345
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User-defined map name
+          example: "Tavern Battle"
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of creation
+          example: "2026-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of last update
+          example: "2026-01-15T14:22:00Z"
+
+    MapFull:
+      allOf:
+        - $ref: '#/components/schemas/MapMetadata'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/MapData'
+
+    CreateMapRequest:
+      type: object
+      required:
+        - name
+        - data
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User-defined map name
+          example: "Tavern Battle"
+        data:
+          $ref: '#/components/schemas/MapData'
+
+    UpdateMapRequest:
+      type: object
+      required:
+        - data
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Optional new name for the map
+          example: "Tavern Battle - Updated"
+        data:
+          $ref: '#/components/schemas/MapData'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code for programmatic handling
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid schema version"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "data.schemaVersion"
+              message:
+                type: string
+                example: "Must be 1"
+          description: Optional field-level validation errors
+
+  responses:
+    BadRequest:
+      description: Request validation failed (malformed JSON, missing required fields)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "BAD_REQUEST"
+            message: "Invalid request body"
+            details:
+              - field: "name"
+                message: "Required field is missing"
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "UNAUTHORIZED"
+            message: "Authentication required"
+
+    Forbidden:
+      description: User does not have permission to access this resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "FORBIDDEN"
+            message: "You do not have permission to access this map"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "NOT_FOUND"
+            message: "Map not found"
+
+    UnprocessableEntity:
+      description: |
+        Payload is syntactically valid but semantically invalid.
+        Examples:
+        - schemaVersion is not 1
+        - rot is outside 0-3 range
+        - x/y values are negative
+        - placements not aligned to grid (for current editor constraints)
+        - widthUnits/heightUnits not positive
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidSchemaVersion:
+              summary: Invalid schema version
+              value:
+                error: "INVALID_SCHEMA_VERSION"
+                message: "Schema version 2 is not supported"
+                details:
+                  - field: "data.schemaVersion"
+                    message: "Must be 1"
+            invalidRotation:
+              summary: Invalid rotation value
+              value:
+                error: "INVALID_PLACEMENT"
+                message: "Placement has invalid rotation"
+                details:
+                  - field: "data.placements[0].rot"
+                    message: "Must be 0, 1, 2, or 3"
+            negativePosition:
+              summary: Negative position
+              value:
+                error: "INVALID_PLACEMENT"
+                message: "Placement has invalid position"
+                details:
+                  - field: "data.placements[0].x"
+                    message: "Must be >= 0"
+            invalidDimensions:
+              summary: Invalid map dimensions
+              value:
+                error: "INVALID_DIMENSIONS"
+                message: "Map dimensions must be positive integers"
+                details:
+                  - field: "data.widthUnits"
+                    message: "Must be a positive integer"

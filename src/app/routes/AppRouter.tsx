@@ -12,6 +12,7 @@ import { EncounterList } from 'pages/encounterList/';
 import { EncounterTracker } from 'pages/encounterTracker';
 import { Login } from 'pages/login';
 import { Main } from 'pages/main';
+import { MapEditor } from 'pages/mapEditor';
 import { StatblockGenerator } from 'pages/statblockGenerator';
 import { TestPage } from 'pages/test';
 import { Footer, Placeholder } from 'shared/ui';
@@ -119,6 +120,17 @@ const router = createBrowserRouter([
       <HeaderProvider>
         <StatblockGenerator />
         <Footer />
+      </HeaderProvider>
+    ),
+  },
+  {
+    path: 'map_editor',
+    element: (
+      <HeaderProvider>
+        <LoginRequiredProvider>
+          <MapEditor />
+          <Footer />
+        </LoginRequiredProvider>
       </HeaderProvider>
     ),
   },
