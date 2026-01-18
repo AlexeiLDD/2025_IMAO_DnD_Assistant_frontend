@@ -19,14 +19,17 @@ type BattleMapProps = {
   image: string;
   cells: boolean[][];
   setCells: React.Dispatch<React.SetStateAction<boolean[][]>>;
+  /** Grid columns (microcell units) */
+  cols: number;
+  /** Grid rows (microcell units) */
+  rows: number;
+  /** Cell size in pixels */
+  cellSize: number;
 };
 
-const cols = 26;
-const rows = 18;
-const cellSize = 50;
 const DEBOUNCE_TIME = 500;
 
-export const BattleMap = ({ image, cells, setCells }: BattleMapProps) => {
+export const BattleMap = ({ image, cells, setCells, cols, rows, cellSize }: BattleMapProps) => {
   const dispatch = useDispatch();
 
   const { participants } = useSelector<EncounterStore>(

@@ -1,13 +1,14 @@
 import type { MapData, Placement, Rotation } from 'entities/maps';
+import { MAP_UNITS_PER_TILE } from 'shared/lib';
 
 import type { Grid, TilesById } from '../ui/types';
 
-/** 1 macro cell = 8x8 microcells */
-export const MACRO_CELL_UNITS = 8;
+/** Units per placed tile (re-exported for backward compat) */
+export const MACRO_CELL_UNITS = MAP_UNITS_PER_TILE;
 
-/** Default tile dimensions in microcells (for tiles without explicit size) */
-const DEFAULT_TILE_WIDTH = 8;
-const DEFAULT_TILE_HEIGHT = 8;
+/** Default tile dimensions in units (for tiles without explicit size) */
+const DEFAULT_TILE_WIDTH = MAP_UNITS_PER_TILE;
+const DEFAULT_TILE_HEIGHT = MAP_UNITS_PER_TILE;
 
 /** Convert degrees (0, 90, 180, 270) to rotation index (0, 1, 2, 3) */
 const degreesToRotation = (degrees: number): Rotation => {

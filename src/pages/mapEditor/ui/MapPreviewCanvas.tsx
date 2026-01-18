@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { MapData, Rotation } from 'entities/maps';
 import type { MapTile } from 'entities/mapTiles';
+import { MAP_UNITS_PER_TILE } from 'shared/lib';
 
 import s from './MapEditor.module.scss';
 
-/** 1 macro cell = 8 microcells */
-const MACRO_CELL_UNITS = 8;
+/** Units per placed tile */
+const MACRO_CELL_UNITS = MAP_UNITS_PER_TILE;
 
 type TilesById = Record<string, MapTile>;
 

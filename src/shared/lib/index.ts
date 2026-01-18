@@ -20,3 +20,20 @@ export { useClamp } from './useClamp';
 export { useSessionURL } from './useSessionURL';
 export { useTokenatorShared } from './useTokenatorShared';
 export { useTokenatorState } from './useTokenatorState';
+
+export { MAP_UNITS_PER_TILE } from './mapUnits';
+
+export {
+  clearMosaicCache,
+  getOrRenderMosaic,
+  renderMapMosaic,
+  revokeMosaicUrl,
+  validateMapForMosaic,
+} from './mosaicRenderer';
+export type {
+  MosaicRenderOptions,
+  MosaicRenderResult,
+  MosaicScaleMode,
+  TilesById,
+  ValidateMosaicResult,
+} from './mosaicRenderer';
