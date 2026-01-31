@@ -16,11 +16,17 @@ export type { D20Roll, Dice, Language, UUID } from './types';
 
 export { blobToBase64, getBase64, getBase64FromBlob } from './base64Funcs';
 export { Dice10, Dice100, Dice12, Dice20, Dice4, Dice6, Dice8 } from './dice';
+export { computeFogHistoryPatch } from './computeFogHistoryPatch';
+export { computeParticipantsCoordsPatch, isOnlyCoordsChange } from './computeParticipantsCoordsPatch';
+export type { CoordsPatch } from './computeParticipantsCoordsPatch';
 export { useClamp } from './useClamp';
 export { useSessionURL } from './useSessionURL';
 export { useTokenatorShared } from './useTokenatorShared';
 export { useTokenatorState } from './useTokenatorState';
 
+export type { BattleMapEvents, MapKeyEvent, MapPointerEvent } from './battleMapEventBus';
+export { screenToWorld, snapToGrid } from './mapCoords';
+export type { Viewport } from './mapCoords';
 export { MAP_UNITS_PER_TILE } from './mapUnits';
 
 export {
