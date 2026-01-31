@@ -120,6 +120,9 @@ export const Header = () => {
                   <Link to='/characters'>
                     <div className={s.dropdownContainer__btn}>Персонажи</div>
                   </Link>
+                  <Link to='/map_editor'>
+                    <div className={s.dropdownContainer__btn}>Редактор карт</div>
+                  </Link>
                   <Link to='#'>
                     <div className={s.dropdownContainer__btn} onClick={() => void logout?.()}>
                       Выйти

@@ -89,7 +89,11 @@ export const AttackModal: React.FC<AttackModalProps> = ({
 
       for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
-          if (cellsCoords && cells[cellsCoords.cellsY + i][cellsCoords.cellsX + j]) {
+          // Safe access with optional chaining to prevent crash during resize
+          const rowIdx = cellsCoords ? cellsCoords.cellsY + i : -1;
+          const colIdx = cellsCoords ? cellsCoords.cellsX + j : -1;
+          const isSelected = cells[rowIdx]?.[colIdx] ?? false;
+          if (cellsCoords && isSelected) {
             attackedCreatures.push(creature);
             resolved = true;
 

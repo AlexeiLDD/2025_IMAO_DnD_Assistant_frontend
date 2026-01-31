@@ -27,3 +27,19 @@ export { useTokenatorState } from './useTokenatorState';
 export type { BattleMapEvents, MapKeyEvent, MapPointerEvent } from './battleMapEventBus';
 export { screenToWorld, snapToGrid } from './mapCoords';
 export type { Viewport } from './mapCoords';
+export { MAP_UNITS_PER_TILE } from './mapUnits';
+
+export {
+  clearMosaicCache,
+  getOrRenderMosaic,
+  renderMapMosaic,
+  revokeMosaicUrl,
+  validateMapForMosaic,
+} from './mosaicRenderer';
+export type {
+  MosaicRenderOptions,
+  MosaicRenderResult,
+  MosaicScaleMode,
+  TilesById,
+  ValidateMosaicResult,
+} from './mosaicRenderer';

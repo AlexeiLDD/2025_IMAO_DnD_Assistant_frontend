@@ -23,6 +23,8 @@ export const GridLayout = ({
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
+      // Safe access with optional chaining to prevent crash during resize
+      const isSelected = cells[row]?.[col] ?? false;
       gridCells.push(
         <rect
           key={`cell-${row}-${col}`}
@@ -31,7 +33,7 @@ export const GridLayout = ({
           width={cellSize}
           height={cellSize}
           fill='transparent'
-          filter={cells[row][col] ? 'url(#selectFilter)' : undefined}
+          filter={isSelected ? 'url(#selectFilter)' : undefined}
           stroke={gridColor}
           strokeDasharray='2 4'
           strokeWidth={1}
