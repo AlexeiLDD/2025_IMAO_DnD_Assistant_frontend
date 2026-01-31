@@ -18,6 +18,21 @@ export type CellsCoordinates = {
   cellsY: number;
 };
 
+// ─── Fog of War ───
+
+/** Stored exploration history. 0 = never seen, 1 = seen at least once */
+export type FogHistoryValue = 0 | 1;
+export type FogHistoryGrid = FogHistoryValue[][]; // [row][col]
+
+export type FogState = {
+  enabled: boolean;
+  mode: 'party';
+  historyParty: FogHistoryGrid;
+};
+
+/** Patch cell: [row, col, value] */
+export type FogHistoryCellPatch = [number, number, FogHistoryValue];
+
 export type Encounter = {
   id: UUID;
   userID: number;

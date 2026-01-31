@@ -1,8 +1,28 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import uniqid from 'uniqid';
 
-import { UUID } from 'shared/lib';
-import { CellsCoordinates, Participant } from './types';
+import { CoordsPatch, UUID } from 'shared/lib';
+import { CellsCoordinates, FogHistoryCellPatch, FogHistoryGrid, FogHistoryValue, FogState, Participant } from './types';
+
+// Grid constants (match BattleMap.tsx:24-26)
+const FOG_ROWS = 18;
+const FOG_COLS = 26;
+
+export function createFogGrid(
+  rows: number,
+  cols: number,
+  initial: FogHistoryValue = 0,
+): FogHistoryGrid {
+  return Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => initial),
+  );
+}
+
+const initialFogState: FogState = {
+  enabled: false,
+  mode: 'party',
+  historyParty: createFogGrid(FOG_ROWS, FOG_COLS),
+};
 
 export type EncounterState = {
   encounterId: UUID | null;
@@ -11,6 +31,7 @@ export type EncounterState = {
   currentRound: number;
   currentTurnIndex: number;
   participants: Participant[];
+  fog: FogState;
 };
 
 export const initialState: EncounterState = {
@@ -20,6 +41,7 @@ export const initialState: EncounterState = {
   currentRound: 1,
   currentTurnIndex: 0,
   participants: [],
+  fog: initialFogState,
 };
 
 export const setNewSaveEncounterVersion = createAsyncThunk<UUID, void>(
@@ -45,6 +67,7 @@ const encounterSlice = createSlice({
       state.currentRound = action.payload.currentRound;
       state.currentTurnIndex = action.payload.currentTurnIndex;
       state.participants = action.payload.participants;
+      state.fog = action.payload.fog ?? initialFogState;
     },
     start: (state) => {
       state.hasStarted = true;
@@ -77,6 +100,20 @@ const encounterSlice = createSlice({
         creature.cellsCoords = { cellsX, cellsY };
       }
     },
+    /**
+     * Batch update participant coordinates from a remote PATCH message.
+     * Does NOT trigger saveVersionHash change - used for remote sync only.
+     */
+    patchParticipantsCoords: (state, action: PayloadAction<CoordsPatch>) => {
+      const patch = action.payload;
+
+      for (const [id, coords] of Object.entries(patch)) {
+        const participant = state.participants.find((p) => p.id === id);
+        if (participant) {
+          participant.cellsCoords = { cellsX: coords.cellsX, cellsY: coords.cellsY };
+        }
+      }
+    },
     setInitiativeOrder: (state, action: PayloadAction<Participant[]>) => {
       state.participants = action.payload;
     },
@@ -95,6 +132,29 @@ const encounterSlice = createSlice({
     sortByInitiative: (state) => {
       state.participants.sort((a, b) => b.initiative - a.initiative);
     },
+    // ─── Fog reducers ───
+    setFogEnabled: (state, action: PayloadAction<boolean>) => {
+      state.fog.enabled = action.payload;
+    },
+    /**
+     * Apply fog history patch (party mode). Merges cells into historyParty.
+     * Does NOT bump saveVersionHash — used for high-frequency brush + auto-reveal.
+     */
+    applyFogHistoryPatchParty: (state, action: PayloadAction<FogHistoryCellPatch[]>) => {
+      const grid = state.fog.historyParty;
+      for (const [row, col, val] of action.payload) {
+        if (row >= 0 && row < grid.length && col >= 0 && col < grid[0].length) {
+          grid[row][col] = val;
+        }
+      }
+    },
+    /**
+     * Replace fog state entirely (from FULL sync).
+     */
+    setFogStateFromFull: (state, action: PayloadAction<FogState>) => {
+      state.fog = action.payload;
+    },
+
     updateInitiative: (state, action: PayloadAction<{ id: UUID; newInitiative: number }>) => {
       const { id, newInitiative } = action.payload;
       state.participants.forEach((creature) => {

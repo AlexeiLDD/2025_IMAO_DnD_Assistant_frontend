@@ -1,3 +1,10 @@
 export { ParticipantsSessionContext, SessionContext } from './sessionContext';
 
-export type { BattleInfoData, Participant, ParticipantsInfoData, SessionMessage } from './types';
+export type {
+  BattleInfoData,
+  EncounterPatchData,
+  FogHistoryPatchData,
+  Participant,
+  ParticipantsInfoData,
+  SessionMessage,
+} from './types';
